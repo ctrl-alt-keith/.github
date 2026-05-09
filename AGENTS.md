@@ -7,6 +7,17 @@ Use `ctrl-alt-keith/ai-workflow-playbook` as the shared workflow baseline.
 This file is only the repo-local execution layer for `.github`.
 Repo-local rules take precedence only for repository-specific behavior.
 
+## Startup And Mode
+
+- Start with `ai-workflow-playbook/docs/start-here.md`, then read this file.
+- Before acting, select the interaction mode: implementation, review/audit, or
+  orchestration/prompt-authoring mode using the playbook guidance.
+- Implementation agents make explicit repo changes and carry them through
+  validation, commit, push, and pull request delivery.
+- Review/audit agents inspect and report without mutating this repository.
+- Orchestration/prompt-authoring agents produce complete, self-contained
+  handoffs unless explicitly asked to implement.
+
 ## Scope
 
 - Org profile material.
@@ -29,6 +40,15 @@ Repo-local rules take precedence only for repository-specific behavior.
   paths GitHub expects when they are added.
 - Do not add project-specific docs, implementation code, or reusable workflow
   policy to this repository.
+
+## Command Form
+
+- Use direct command execution for ordinary repo commands, including
+  `git ...`, `gh ...`, `make ...`, `python ...`, and repo-local scripts or
+  tools.
+- Before using `zsh`, `bash`, `sh`, `zsh -lc`, `bash -lc`, `sh -c`, aliases,
+  or equivalent wrapper shells, check whether the command has a direct form.
+- Use shell wrappers only when shell syntax is genuinely required.
 
 ## Validation
 
