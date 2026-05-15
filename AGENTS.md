@@ -52,13 +52,11 @@ Repo-local rules take precedence only for repository-specific behavior.
 
 ## Validation
 
-- When this repository has no canonical validation command, validate by
-  inspection.
-- Inspect Markdown rendering, links, repository scope, and public-safe content.
-- If a canonical validation command is later documented here, use that command
-  instead.
-- If a Makefile is later added, `make check` becomes the canonical path only
-  when documented here.
+- Use `make check` as the canonical local validation entrypoint.
+- `make check` runs `git diff --check` and Markdown lint with
+  `markdownlint-cli2`.
+- Inspect Markdown rendering, links, repository scope, and public-safe content
+  when Markdown content changes.
 
 ## Branches
 
