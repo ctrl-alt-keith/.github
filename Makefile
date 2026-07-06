@@ -9,7 +9,7 @@ check: ## Run canonical local validation.
 	@git diff --check
 	@if command -v markdownlint-cli2 >/dev/null 2>&1; then \
 		echo "Running markdownlint-cli2"; \
-		markdownlint-cli2 "**/*.md"; \
+		markdownlint-cli2 "**/*.md" "#.worktrees/**"; \
 	else \
 		echo "markdownlint-cli2 is not installed."; \
 		echo "Install markdownlint-cli2, then rerun 'make check'."; \
