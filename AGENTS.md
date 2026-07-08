@@ -53,8 +53,8 @@ Repo-local rules take precedence only for repository-specific behavior.
 ## Validation
 
 - Use `make check` as the canonical local validation entrypoint.
-- `make check` runs `git diff --check` and Markdown lint with
-  `markdownlint-cli2`.
+- `make check` validates GitHub automation configuration, runs
+  `git diff --check`, and runs Markdown lint with `markdownlint-cli2`.
 - Inspect Markdown rendering, links, repository scope, and public-safe content
   when Markdown content changes.
 
