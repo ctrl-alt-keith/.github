@@ -19,3 +19,4 @@ check: check-github-config ## Run canonical local validation.
 check-github-config: ## Validate GitHub automation configuration.
 	@ruby tools/check_dependabot_config.rb
 	@ruby tools/check_workflow_config.rb
+	@ruby tests/test_check_workflow_config.rb
