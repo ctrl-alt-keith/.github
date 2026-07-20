@@ -115,4 +115,18 @@ class WorkflowConfigTest < Minitest::Test
 
     assert_invalid("must have exactly one canonical make check step") { workflow }
   end
+
+  def test_rejects_pull_request_target_trigger
+    workflow = valid_workflow
+    workflow["on"]["pull_request_target"] = nil
+
+    assert_invalid("must not use pull_request_target") { workflow }
+  end
+
+  def test_rejects_non_read_contents_permission
+    workflow = valid_workflow
+    workflow["permissions"] = { "contents" => "write" }
+
+    assert_invalid("permissions.contents must be read") { workflow }
+  end
 end
