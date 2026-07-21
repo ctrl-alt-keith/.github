@@ -129,4 +129,29 @@ class WorkflowConfigTest < Minitest::Test
 
     assert_invalid("permissions.contents must be read") { workflow }
   end
+
+  def test_rejects_non_mapping_root
+    assert_invalid("root must be a mapping") { [] }
+  end
+
+  def test_rejects_non_mapping_triggers
+    workflow = valid_workflow
+    workflow["on"] = ["pull_request", "push"]
+
+    assert_invalid("on must be a mapping") { workflow }
+  end
+
+  def test_rejects_empty_jobs
+    workflow = valid_workflow
+    workflow["jobs"] = {}
+
+    assert_invalid("jobs must be a non-empty mapping") { workflow }
+  end
+
+  def test_rejects_non_mapping_step
+    workflow = valid_workflow
+    workflow["jobs"]["markdownlint"]["steps"] << "make check"
+
+    assert_invalid("jobs.markdownlint.steps[3] must be a mapping") { workflow }
+  end
 end
