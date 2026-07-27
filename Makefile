@@ -7,6 +7,10 @@ help: ## List available repo-local Makefile targets with short descriptions.
 
 check: check-github-config ## Run canonical local validation.
 	@git diff --check
+	@git diff --cached --check
+	@if git rev-parse --verify --quiet HEAD^ >/dev/null; then \
+		git diff --check HEAD^ HEAD; \
+	fi
 	@if command -v markdownlint-cli2 >/dev/null 2>&1; then \
 		echo "Running markdownlint-cli2"; \
 		markdownlint-cli2 "**/*.md" "#.worktrees/**"; \
