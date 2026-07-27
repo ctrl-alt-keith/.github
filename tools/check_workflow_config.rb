@@ -46,6 +46,13 @@ def checkout_step?(step)
   step["uses"].is_a?(String) && step["uses"].start_with?("actions/checkout@")
 end
 
+def checkout_with_commit_history?(step)
+  return false unless checkout_step?(step)
+
+  options = step["with"]
+  options.is_a?(Hash) && options["fetch-depth"].is_a?(Integer) && options["fetch-depth"] >= 2
+end
+
 def markdownlint_install_step?(step)
   step["run"].is_a?(String) && step["run"].include?("markdownlint-cli2")
 end
@@ -69,6 +76,10 @@ def validate_make_check_job_order!(jobs)
 
   unless prior_steps.any? { |step| checkout_step?(step) }
     raise WorkflowConfigError, "jobs.#{job_name} must check out the repository before make check"
+  end
+
+  unless prior_steps.any? { |step| checkout_with_commit_history?(step) }
+    raise WorkflowConfigError, "jobs.#{job_name} checkout must fetch at least two commits before make check"
   end
 
   return if prior_steps.any? { |step| markdownlint_install_step?(step) }
