@@ -14,7 +14,7 @@ class WorkflowConfigTest < Minitest::Test
       "jobs" => {
         "markdownlint" => {
           "steps" => [
-            { "uses" => "actions/checkout@v7" },
+            { "uses" => "actions/checkout@v7", "with" => { "fetch-depth" => 2 } },
             { "run" => "npm install --global markdownlint-cli2" },
             { "run" => "make check" }
           ]
@@ -46,7 +46,7 @@ class WorkflowConfigTest < Minitest::Test
   def test_rejects_markdownlint_install_after_make_check
     workflow = valid_workflow
     workflow["jobs"]["markdownlint"]["steps"] = [
-      { "uses" => "actions/checkout@v7" },
+      { "uses" => "actions/checkout@v7", "with" => { "fetch-depth" => 2 } },
       { "run" => "make check" },
       { "run" => "npm install --global markdownlint-cli2" }
     ]
@@ -83,7 +83,7 @@ class WorkflowConfigTest < Minitest::Test
       },
       "validate" => {
         "steps" => [
-          { "uses" => "actions/checkout@v7" },
+          { "uses" => "actions/checkout@v7", "with" => { "fetch-depth" => 2 } },
           { "run" => "make check" }
         ]
       }
@@ -107,7 +107,7 @@ class WorkflowConfigTest < Minitest::Test
     workflow = valid_workflow
     workflow["jobs"]["extra"] = {
       "steps" => [
-        { "uses" => "actions/checkout@v7" },
+        { "uses" => "actions/checkout@v7", "with" => { "fetch-depth" => 2 } },
         { "run" => "npm install --global markdownlint-cli2" },
         { "run" => "make check" }
       ]
@@ -153,5 +153,19 @@ class WorkflowConfigTest < Minitest::Test
     workflow["jobs"]["markdownlint"]["steps"] << "make check"
 
     assert_invalid("jobs.markdownlint.steps[3] must be a mapping") { workflow }
+  end
+
+  def test_rejects_checkout_without_commit_history
+    workflow = valid_workflow
+    workflow["jobs"]["markdownlint"]["steps"][0] = { "uses" => "actions/checkout@v7" }
+
+    assert_invalid("checkout must fetch at least two commits") { workflow }
+  end
+
+  def test_rejects_checkout_with_insufficient_commit_history
+    workflow = valid_workflow
+    workflow["jobs"]["markdownlint"]["steps"][0]["with"]["fetch-depth"] = 1
+
+    assert_invalid("checkout must fetch at least two commits") { workflow }
   end
 end
