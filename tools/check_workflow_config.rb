@@ -82,9 +82,15 @@ def validate_make_check_job_order!(jobs)
     raise WorkflowConfigError, "jobs.#{job_name} checkout must fetch at least two commits before make check"
   end
 
-  return if prior_steps.any? { |step| markdownlint_install_step?(step) }
+  unless prior_steps.any? { |step| markdownlint_install_step?(step) }
+    raise WorkflowConfigError, "jobs.#{job_name} must install markdownlint-cli2 before make check"
+  end
 
-  raise WorkflowConfigError, "jobs.#{job_name} must install markdownlint-cli2 before make check"
+  timeout = jobs.fetch(job_name)["timeout-minutes"]
+  unless timeout.is_a?(Integer) && timeout.positive? && timeout <= 15
+    raise WorkflowConfigError,
+          "jobs.#{job_name}.timeout-minutes must be an integer from 1 to 15"
+  end
 end
 
 def validate_workflow!(workflow)
