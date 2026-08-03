@@ -13,6 +13,7 @@ class WorkflowConfigTest < Minitest::Test
       "permissions" => { "contents" => "read" },
       "jobs" => {
         "markdownlint" => {
+          "timeout-minutes" => 10,
           "steps" => [
             { "uses" => "actions/checkout@v7", "with" => { "fetch-depth" => 2 } },
             { "run" => "npm install --global markdownlint-cli2" },
@@ -153,6 +154,20 @@ class WorkflowConfigTest < Minitest::Test
     workflow["jobs"]["markdownlint"]["steps"] << "make check"
 
     assert_invalid("jobs.markdownlint.steps[3] must be a mapping") { workflow }
+  end
+
+  def test_rejects_job_without_timeout
+    workflow = valid_workflow
+    workflow["jobs"]["markdownlint"].delete("timeout-minutes")
+
+    assert_invalid("timeout-minutes must be an integer from 1 to 15") { workflow }
+  end
+
+  def test_rejects_excessive_job_timeout
+    workflow = valid_workflow
+    workflow["jobs"]["markdownlint"]["timeout-minutes"] = 30
+
+    assert_invalid("timeout-minutes must be an integer from 1 to 15") { workflow }
   end
 
   def test_rejects_checkout_without_commit_history
