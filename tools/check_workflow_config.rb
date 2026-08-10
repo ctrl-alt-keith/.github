@@ -57,6 +57,20 @@ def markdownlint_install_step?(step)
   step["run"].is_a?(String) && step["run"].include?("markdownlint-cli2")
 end
 
+def validate_permissions!(workflow, jobs)
+  permissions = mapping!(workflow["permissions"], "permissions must be a mapping")
+  unless permissions == { "contents" => "read" }
+    raise WorkflowConfigError, "permissions must grant only contents: read"
+  end
+
+  jobs.each do |job_name, job|
+    mapping!(job, "jobs.#{job_name} must be a mapping")
+    next unless job.key?("permissions")
+
+    raise WorkflowConfigError, "jobs.#{job_name} must not override permissions"
+  end
+end
+
 def validate_make_check_job_order!(jobs)
   make_check_locations = []
 
@@ -111,14 +125,10 @@ def validate_workflow!(workflow)
     raise WorkflowConfigError, "must not use pull_request_target"
   end
 
-  permissions = mapping!(workflow["permissions"], "permissions must be a mapping")
-  unless permissions["contents"] == "read"
-    raise WorkflowConfigError, "permissions.contents must be read"
-  end
-
   jobs = mapping!(workflow["jobs"], "jobs must be a non-empty mapping")
   raise WorkflowConfigError, "jobs must be a non-empty mapping" if jobs.empty?
 
+  validate_permissions!(workflow, jobs)
   validate_make_check_job_order!(jobs)
 end
 
