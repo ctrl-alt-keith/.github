@@ -72,6 +72,13 @@ class DependabotConfigTest < Minitest::Test
     assert_invalid("updates[0].schedule must be a mapping") { config }
   end
 
+  def test_rejects_non_mapping_schedule
+    config = valid_config
+    config["updates"][0]["schedule"] = "weekly"
+
+    assert_invalid("updates[0].schedule must be a mapping") { config }
+  end
+
   def test_rejects_missing_schedule_interval
     config = valid_config
     config["updates"][0]["schedule"].delete("interval")
