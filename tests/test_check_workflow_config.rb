@@ -128,7 +128,21 @@ class WorkflowConfigTest < Minitest::Test
     workflow = valid_workflow
     workflow["permissions"] = { "contents" => "write" }
 
-    assert_invalid("permissions.contents must be read") { workflow }
+    assert_invalid("permissions must grant only contents: read") { workflow }
+  end
+
+  def test_rejects_additional_top_level_permission
+    workflow = valid_workflow
+    workflow["permissions"]["id-token"] = "write"
+
+    assert_invalid("permissions must grant only contents: read") { workflow }
+  end
+
+  def test_rejects_job_level_permission_override
+    workflow = valid_workflow
+    workflow["jobs"]["markdownlint"]["permissions"] = { "contents" => "write" }
+
+    assert_invalid("jobs.markdownlint must not override permissions") { workflow }
   end
 
   def test_rejects_non_mapping_root
