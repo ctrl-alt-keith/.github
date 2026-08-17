@@ -71,6 +71,17 @@ def validate_permissions!(workflow, jobs)
   end
 end
 
+def validate_concurrency!(workflow)
+  concurrency = mapping!(workflow["concurrency"], "concurrency must be a mapping")
+  unless concurrency == {
+    "group" => "${{ github.workflow }}-${{ github.ref }}",
+    "cancel-in-progress" => true
+  }
+    raise WorkflowConfigError,
+          "concurrency must cancel superseded runs for the same workflow and ref"
+  end
+end
+
 def validate_make_check_job_order!(jobs)
   make_check_locations = []
 
@@ -128,6 +139,7 @@ def validate_workflow!(workflow)
   jobs = mapping!(workflow["jobs"], "jobs must be a non-empty mapping")
   raise WorkflowConfigError, "jobs must be a non-empty mapping" if jobs.empty?
 
+  validate_concurrency!(workflow)
   validate_permissions!(workflow, jobs)
   validate_make_check_job_order!(jobs)
 end
