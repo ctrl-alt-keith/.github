@@ -10,6 +10,10 @@ class WorkflowConfigTest < Minitest::Test
         "pull_request" => nil,
         "push" => { "branches" => ["main"] }
       },
+      "concurrency" => {
+        "group" => "${{ github.workflow }}-${{ github.ref }}",
+        "cancel-in-progress" => true
+      },
       "permissions" => { "contents" => "read" },
       "jobs" => {
         "markdownlint" => {
@@ -122,6 +126,27 @@ class WorkflowConfigTest < Minitest::Test
     workflow["on"]["pull_request_target"] = nil
 
     assert_invalid("must not use pull_request_target") { workflow }
+  end
+
+  def test_rejects_missing_concurrency
+    workflow = valid_workflow
+    workflow.delete("concurrency")
+
+    assert_invalid("concurrency must be a mapping") { workflow }
+  end
+
+  def test_rejects_concurrency_for_another_workflow_or_ref
+    workflow = valid_workflow
+    workflow["concurrency"]["group"] = "markdownlint"
+
+    assert_invalid("concurrency must cancel superseded runs for the same workflow and ref") { workflow }
+  end
+
+  def test_rejects_concurrency_that_keeps_superseded_runs
+    workflow = valid_workflow
+    workflow["concurrency"]["cancel-in-progress"] = false
+
+    assert_invalid("concurrency must cancel superseded runs for the same workflow and ref") { workflow }
   end
 
   def test_rejects_non_read_contents_permission
