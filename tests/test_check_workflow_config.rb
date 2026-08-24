@@ -222,27 +222,52 @@ class WorkflowConfigTest < Minitest::Test
     workflow = valid_workflow
     workflow["jobs"]["markdownlint"]["steps"][0] = { "uses" => "actions/checkout@v7" }
 
-    assert_invalid("checkout must fetch at least two commits") { workflow }
+    assert_invalid("needs one checkout with fetch-depth at least two") { workflow }
   end
 
   def test_rejects_checkout_with_insufficient_commit_history
     workflow = valid_workflow
     workflow["jobs"]["markdownlint"]["steps"][0]["with"]["fetch-depth"] = 1
 
-    assert_invalid("checkout must fetch at least two commits") { workflow }
+    assert_invalid("needs one checkout with fetch-depth at least two") { workflow }
   end
 
   def test_rejects_checkout_that_persists_credentials
     workflow = valid_workflow
     workflow["jobs"]["markdownlint"]["steps"][0]["with"].delete("persist-credentials")
 
-    assert_invalid("checkout must disable persisted credentials") { workflow }
+    assert_invalid("needs one checkout with fetch-depth at least two") { workflow }
   end
 
   def test_rejects_checkout_with_persisted_credentials_enabled
     workflow = valid_workflow
     workflow["jobs"]["markdownlint"]["steps"][0]["with"]["persist-credentials"] = true
 
-    assert_invalid("checkout must disable persisted credentials") { workflow }
+    assert_invalid("needs one checkout with fetch-depth at least two") { workflow }
+  end
+
+  def test_rejects_split_checkout_safety_requirements
+    workflow = valid_workflow
+    workflow["jobs"]["markdownlint"]["steps"].unshift(
+      {
+        "uses" => "actions/checkout@v7",
+        "with" => { "fetch-depth" => 2 }
+      }
+    )
+    workflow["jobs"]["markdownlint"]["steps"][1]["with"]["fetch-depth"] = 1
+
+    assert_invalid("needs one checkout with fetch-depth at least two") { workflow }
+  end
+
+  def test_rejects_additional_checkout_that_persists_credentials
+    workflow = valid_workflow
+    workflow["jobs"]["markdownlint"]["steps"].unshift(
+      {
+        "uses" => "actions/checkout@v7",
+        "with" => { "fetch-depth" => 2 }
+      }
+    )
+
+    assert_invalid("every checkout before make check must disable persisted credentials") { workflow }
   end
 end

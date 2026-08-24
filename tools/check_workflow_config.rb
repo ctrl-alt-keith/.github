@@ -46,18 +46,18 @@ def checkout_step?(step)
   step["uses"].is_a?(String) && step["uses"].start_with?("actions/checkout@")
 end
 
-def checkout_with_commit_history?(step)
-  return false unless checkout_step?(step)
-
-  options = step["with"]
-  options.is_a?(Hash) && options["fetch-depth"].is_a?(Integer) && options["fetch-depth"] >= 2
-end
-
 def checkout_without_persisted_credentials?(step)
   return false unless checkout_step?(step)
 
   options = step["with"]
   options.is_a?(Hash) && options["persist-credentials"] == false
+end
+
+def checkout_with_safe_history_and_credentials?(step)
+  return false unless checkout_without_persisted_credentials?(step)
+
+  options = step["with"]
+  options["fetch-depth"].is_a?(Integer) && options["fetch-depth"] >= 2
 end
 
 def markdownlint_install_step?(step)
@@ -105,18 +105,20 @@ def validate_make_check_job_order!(jobs)
 
   job_name, steps, make_check_index = make_check_locations.first
   prior_steps = steps.first(make_check_index)
+  prior_checkouts = prior_steps.select { |step| checkout_step?(step) }
 
-  unless prior_steps.any? { |step| checkout_step?(step) }
+  if prior_checkouts.empty?
     raise WorkflowConfigError, "jobs.#{job_name} must check out the repository before make check"
   end
 
-  unless prior_steps.any? { |step| checkout_with_commit_history?(step) }
-    raise WorkflowConfigError, "jobs.#{job_name} checkout must fetch at least two commits before make check"
+  unless prior_checkouts.any? { |step| checkout_with_safe_history_and_credentials?(step) }
+    raise WorkflowConfigError,
+          "jobs.#{job_name} needs one checkout with fetch-depth at least two and persisted credentials disabled"
   end
 
-  unless prior_steps.any? { |step| checkout_without_persisted_credentials?(step) }
+  unless prior_checkouts.all? { |step| checkout_without_persisted_credentials?(step) }
     raise WorkflowConfigError,
-          "jobs.#{job_name} checkout must disable persisted credentials before make check"
+          "jobs.#{job_name} every checkout before make check must disable persisted credentials"
   end
 
   unless prior_steps.any? { |step| markdownlint_install_step?(step) }
