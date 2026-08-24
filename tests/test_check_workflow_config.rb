@@ -19,7 +19,10 @@ class WorkflowConfigTest < Minitest::Test
         "markdownlint" => {
           "timeout-minutes" => 10,
           "steps" => [
-            { "uses" => "actions/checkout@v7", "with" => { "fetch-depth" => 2 } },
+            {
+              "uses" => "actions/checkout@v7",
+              "with" => { "fetch-depth" => 2, "persist-credentials" => false }
+            },
             { "run" => "npm install --global markdownlint-cli2" },
             { "run" => "make check" }
           ]
@@ -51,7 +54,10 @@ class WorkflowConfigTest < Minitest::Test
   def test_rejects_markdownlint_install_after_make_check
     workflow = valid_workflow
     workflow["jobs"]["markdownlint"]["steps"] = [
-      { "uses" => "actions/checkout@v7", "with" => { "fetch-depth" => 2 } },
+      {
+        "uses" => "actions/checkout@v7",
+        "with" => { "fetch-depth" => 2, "persist-credentials" => false }
+      },
       { "run" => "make check" },
       { "run" => "npm install --global markdownlint-cli2" }
     ]
@@ -88,7 +94,10 @@ class WorkflowConfigTest < Minitest::Test
       },
       "validate" => {
         "steps" => [
-          { "uses" => "actions/checkout@v7", "with" => { "fetch-depth" => 2 } },
+          {
+            "uses" => "actions/checkout@v7",
+            "with" => { "fetch-depth" => 2, "persist-credentials" => false }
+          },
           { "run" => "make check" }
         ]
       }
@@ -221,5 +230,19 @@ class WorkflowConfigTest < Minitest::Test
     workflow["jobs"]["markdownlint"]["steps"][0]["with"]["fetch-depth"] = 1
 
     assert_invalid("checkout must fetch at least two commits") { workflow }
+  end
+
+  def test_rejects_checkout_that_persists_credentials
+    workflow = valid_workflow
+    workflow["jobs"]["markdownlint"]["steps"][0]["with"].delete("persist-credentials")
+
+    assert_invalid("checkout must disable persisted credentials") { workflow }
+  end
+
+  def test_rejects_checkout_with_persisted_credentials_enabled
+    workflow = valid_workflow
+    workflow["jobs"]["markdownlint"]["steps"][0]["with"]["persist-credentials"] = true
+
+    assert_invalid("checkout must disable persisted credentials") { workflow }
   end
 end

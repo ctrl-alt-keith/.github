@@ -53,6 +53,13 @@ def checkout_with_commit_history?(step)
   options.is_a?(Hash) && options["fetch-depth"].is_a?(Integer) && options["fetch-depth"] >= 2
 end
 
+def checkout_without_persisted_credentials?(step)
+  return false unless checkout_step?(step)
+
+  options = step["with"]
+  options.is_a?(Hash) && options["persist-credentials"] == false
+end
+
 def markdownlint_install_step?(step)
   step["run"].is_a?(String) && step["run"].include?("markdownlint-cli2")
 end
@@ -105,6 +112,11 @@ def validate_make_check_job_order!(jobs)
 
   unless prior_steps.any? { |step| checkout_with_commit_history?(step) }
     raise WorkflowConfigError, "jobs.#{job_name} checkout must fetch at least two commits before make check"
+  end
+
+  unless prior_steps.any? { |step| checkout_without_persisted_credentials?(step) }
+    raise WorkflowConfigError,
+          "jobs.#{job_name} checkout must disable persisted credentials before make check"
   end
 
   unless prior_steps.any? { |step| markdownlint_install_step?(step) }
