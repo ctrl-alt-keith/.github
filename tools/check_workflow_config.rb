@@ -46,6 +46,10 @@ def checkout_step?(step)
   step["uses"].is_a?(String) && step["uses"].start_with?("actions/checkout@")
 end
 
+def pinned_action_step?(step, action)
+  step["uses"].is_a?(String) && step["uses"].match?(/\A#{Regexp.escape(action)}@[0-9a-f]{40}\z/)
+end
+
 def checkout_without_persisted_credentials?(step)
   return false unless checkout_step?(step)
 
@@ -132,6 +136,21 @@ def validate_make_check_job_order!(jobs)
   end
 end
 
+def validate_actions_pinned!(jobs)
+  jobs.each do |job_name, job|
+    step_list!(job_name, job).each do |step|
+      next unless step["uses"].is_a?(String)
+
+      %w[actions/checkout actions/setup-node].each do |action|
+        next unless step["uses"].start_with?("#{action}@")
+        unless pinned_action_step?(step, action)
+          raise WorkflowConfigError, "jobs.#{job_name} must pin #{action} to a 40-character commit SHA"
+        end
+      end
+    end
+  end
+end
+
 def validate_workflow!(workflow)
   mapping!(workflow, "root must be a mapping")
 
@@ -155,6 +174,7 @@ def validate_workflow!(workflow)
 
   validate_concurrency!(workflow)
   validate_permissions!(workflow, jobs)
+  validate_actions_pinned!(jobs)
   validate_make_check_job_order!(jobs)
 end
 
