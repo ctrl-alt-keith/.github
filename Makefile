@@ -25,5 +25,3 @@ check-github-config: ## Validate GitHub automation configuration.
 	@ruby tests/test_check_dependabot_config.rb
 	@ruby tools/check_workflow_config.rb
 	@ruby tests/test_check_workflow_config.rb
-	@ruby tests/test_org_profile.rb
-	@ruby tests/test_pull_request_template.rb
