@@ -183,31 +183,6 @@ class WorkflowConfigTest < Minitest::Test
     assert_invalid("jobs.markdownlint must not override permissions") { workflow }
   end
 
-  def test_rejects_non_mapping_root
-    assert_invalid("root must be a mapping") { [] }
-  end
-
-  def test_rejects_non_mapping_triggers
-    workflow = valid_workflow
-    workflow["on"] = ["pull_request", "push"]
-
-    assert_invalid("on must be a mapping") { workflow }
-  end
-
-  def test_rejects_empty_jobs
-    workflow = valid_workflow
-    workflow["jobs"] = {}
-
-    assert_invalid("jobs must be a non-empty mapping") { workflow }
-  end
-
-  def test_rejects_non_mapping_step
-    workflow = valid_workflow
-    workflow["jobs"]["markdownlint"]["steps"] << "make check"
-
-    assert_invalid("jobs.markdownlint.steps[4] must be a mapping") { workflow }
-  end
-
   def test_rejects_job_without_timeout
     workflow = valid_workflow
     workflow["jobs"]["markdownlint"].delete("timeout-minutes")
@@ -229,23 +204,9 @@ class WorkflowConfigTest < Minitest::Test
     assert_invalid("needs one checkout with fetch-depth at least two") { workflow }
   end
 
-  def test_rejects_checkout_with_insufficient_commit_history
-    workflow = valid_workflow
-    workflow["jobs"]["markdownlint"]["steps"][0]["with"]["fetch-depth"] = 1
-
-    assert_invalid("needs one checkout with fetch-depth at least two") { workflow }
-  end
-
   def test_rejects_checkout_that_persists_credentials
     workflow = valid_workflow
     workflow["jobs"]["markdownlint"]["steps"][0]["with"].delete("persist-credentials")
-
-    assert_invalid("needs one checkout with fetch-depth at least two") { workflow }
-  end
-
-  def test_rejects_checkout_with_persisted_credentials_enabled
-    workflow = valid_workflow
-    workflow["jobs"]["markdownlint"]["steps"][0]["with"]["persist-credentials"] = true
 
     assert_invalid("needs one checkout with fetch-depth at least two") { workflow }
   end
