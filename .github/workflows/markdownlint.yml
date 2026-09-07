@@ -32,7 +32,7 @@ jobs:
           node-version: lts/*
 
       - name: Install markdownlint-cli2
-        run: npm install --global markdownlint-cli2
+        run: npm install --global markdownlint-cli2@0.23.2 --ignore-scripts
 
       - name: Run checks
         run: make check
