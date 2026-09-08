@@ -61,7 +61,7 @@ def checkout_with_safe_history_and_credentials?(step)
   return false unless checkout_without_persisted_credentials?(step)
 
   options = step["with"]
-  options["fetch-depth"].is_a?(Integer) && options["fetch-depth"] >= 2
+  options.is_a?(Hash) && options["fetch-depth"].is_a?(Integer) && options["fetch-depth"] >= 2
 end
 
 def markdownlint_install_step?(step)

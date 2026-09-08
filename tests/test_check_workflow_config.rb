@@ -211,6 +211,13 @@ class WorkflowConfigTest < Minitest::Test
     assert_invalid("needs one checkout with fetch-depth at least two") { workflow }
   end
 
+  def test_rejects_checkout_with_non_mapping_options
+    workflow = valid_workflow
+    workflow["jobs"]["markdownlint"]["steps"][0]["with"] = []
+
+    assert_invalid("needs one checkout with fetch-depth at least two") { workflow }
+  end
+
   def test_rejects_split_checkout_safety_requirements
     workflow = valid_workflow
     workflow["jobs"]["markdownlint"]["steps"].unshift(
