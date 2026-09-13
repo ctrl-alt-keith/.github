@@ -6,6 +6,7 @@ require_relative "../tools/check_workflow_config"
 class WorkflowConfigTest < Minitest::Test
   CHECKOUT = "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1"
   SETUP_NODE = "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020"
+  SETUP_RUBY = "ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b"
 
   def valid_workflow
     {
@@ -19,7 +20,7 @@ class WorkflowConfigTest < Minitest::Test
       },
       "permissions" => { "contents" => "read" },
       "jobs" => {
-        "markdownlint" => {
+        "check" => {
           "timeout-minutes" => 10,
           "steps" => [
             {
@@ -27,6 +28,7 @@ class WorkflowConfigTest < Minitest::Test
               "with" => { "fetch-depth" => 2, "persist-credentials" => false }
             },
             { "uses" => SETUP_NODE },
+            { "uses" => SETUP_RUBY },
             { "run" => "npm install --global markdownlint-cli2" },
             { "run" => "make check" }
           ]
@@ -46,7 +48,7 @@ class WorkflowConfigTest < Minitest::Test
 
   def test_rejects_checkout_after_make_check
     workflow = valid_workflow
-    workflow["jobs"]["markdownlint"]["steps"] = [
+    workflow["jobs"]["check"]["steps"] = [
       { "run" => "npm install --global markdownlint-cli2" },
       { "run" => "make check" },
       { "uses" => CHECKOUT }
@@ -57,7 +59,7 @@ class WorkflowConfigTest < Minitest::Test
 
   def test_rejects_markdownlint_install_after_make_check
     workflow = valid_workflow
-    workflow["jobs"]["markdownlint"]["steps"] = [
+    workflow["jobs"]["check"]["steps"] = [
       {
         "uses" => CHECKOUT,
         "with" => { "fetch-depth" => 2, "persist-credentials" => false }
@@ -112,7 +114,7 @@ class WorkflowConfigTest < Minitest::Test
 
   def test_rejects_missing_canonical_make_check
     workflow = valid_workflow
-    workflow["jobs"]["markdownlint"]["steps"] = [
+    workflow["jobs"]["check"]["steps"] = [
       { "uses" => CHECKOUT },
       { "run" => "npm install --global markdownlint-cli2" },
       { "run" => "make check-github-config" }
@@ -178,62 +180,62 @@ class WorkflowConfigTest < Minitest::Test
 
   def test_rejects_job_level_permission_override
     workflow = valid_workflow
-    workflow["jobs"]["markdownlint"]["permissions"] = { "contents" => "write" }
+    workflow["jobs"]["check"]["permissions"] = { "contents" => "write" }
 
-    assert_invalid("jobs.markdownlint must not override permissions") { workflow }
+    assert_invalid("jobs.check must not override permissions") { workflow }
   end
 
   def test_rejects_job_without_timeout
     workflow = valid_workflow
-    workflow["jobs"]["markdownlint"].delete("timeout-minutes")
+    workflow["jobs"]["check"].delete("timeout-minutes")
 
     assert_invalid("timeout-minutes must be an integer from 1 to 15") { workflow }
   end
 
   def test_rejects_excessive_job_timeout
     workflow = valid_workflow
-    workflow["jobs"]["markdownlint"]["timeout-minutes"] = 30
+    workflow["jobs"]["check"]["timeout-minutes"] = 30
 
     assert_invalid("timeout-minutes must be an integer from 1 to 15") { workflow }
   end
 
   def test_rejects_checkout_without_commit_history
     workflow = valid_workflow
-    workflow["jobs"]["markdownlint"]["steps"][0] = { "uses" => CHECKOUT }
+    workflow["jobs"]["check"]["steps"][0] = { "uses" => CHECKOUT }
 
     assert_invalid("needs one checkout with fetch-depth at least two") { workflow }
   end
 
   def test_rejects_checkout_that_persists_credentials
     workflow = valid_workflow
-    workflow["jobs"]["markdownlint"]["steps"][0]["with"].delete("persist-credentials")
+    workflow["jobs"]["check"]["steps"][0]["with"].delete("persist-credentials")
 
     assert_invalid("needs one checkout with fetch-depth at least two") { workflow }
   end
 
   def test_rejects_checkout_with_non_mapping_options
     workflow = valid_workflow
-    workflow["jobs"]["markdownlint"]["steps"][0]["with"] = []
+    workflow["jobs"]["check"]["steps"][0]["with"] = []
 
     assert_invalid("needs one checkout with fetch-depth at least two") { workflow }
   end
 
   def test_rejects_split_checkout_safety_requirements
     workflow = valid_workflow
-    workflow["jobs"]["markdownlint"]["steps"].unshift(
+    workflow["jobs"]["check"]["steps"].unshift(
       {
         "uses" => CHECKOUT,
         "with" => { "fetch-depth" => 2 }
       }
     )
-    workflow["jobs"]["markdownlint"]["steps"][1]["with"]["fetch-depth"] = 1
+    workflow["jobs"]["check"]["steps"][1]["with"]["fetch-depth"] = 1
 
     assert_invalid("needs one checkout with fetch-depth at least two") { workflow }
   end
 
   def test_rejects_additional_checkout_that_persists_credentials
     workflow = valid_workflow
-    workflow["jobs"]["markdownlint"]["steps"].unshift(
+    workflow["jobs"]["check"]["steps"].unshift(
       {
         "uses" => CHECKOUT,
         "with" => { "fetch-depth" => 2 }
@@ -245,15 +247,22 @@ class WorkflowConfigTest < Minitest::Test
 
   def test_rejects_unpinned_checkout_action
     workflow = valid_workflow
-    workflow["jobs"]["markdownlint"]["steps"][0]["uses"] = "actions/checkout@v7"
+    workflow["jobs"]["check"]["steps"][0]["uses"] = "actions/checkout@v7"
 
     assert_invalid("must pin actions/checkout to a 40-character commit SHA") { workflow }
   end
 
   def test_rejects_unpinned_setup_node_action
     workflow = valid_workflow
-    workflow["jobs"]["markdownlint"]["steps"][1]["uses"] = "actions/setup-node@v7"
+    workflow["jobs"]["check"]["steps"][1]["uses"] = "actions/setup-node@v7"
 
     assert_invalid("must pin actions/setup-node to a 40-character commit SHA") { workflow }
+  end
+
+  def test_rejects_unpinned_third_party_action
+    workflow = valid_workflow
+    workflow["jobs"]["check"]["steps"][2]["uses"] = "ruby/setup-ruby@v1"
+
+    assert_invalid("must pin ruby/setup-ruby to a 40-character commit SHA") { workflow }
   end
 end

@@ -57,6 +57,8 @@ Repo-local rules take precedence only for repository-specific behavior.
   `git diff --check`, and runs Markdown lint with `markdownlint-cli2`.
 - Inspect Markdown rendering, links, repository scope, and public-safe content
   when Markdown content changes.
+- The hosted check run context is `check`. It runs the same canonical
+  `make check` as local validation and is the merge gate for `main`.
 
 ## Branches
 

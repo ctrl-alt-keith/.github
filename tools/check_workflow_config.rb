@@ -3,7 +3,7 @@
 
 require "yaml"
 
-WORKFLOW_PATH = File.expand_path("../.github/workflows/markdownlint.yml", __dir__)
+WORKFLOW_PATH = File.expand_path("../.github/workflows/check.yml", __dir__)
 
 class WorkflowConfigError < StandardError; end
 
@@ -136,17 +136,21 @@ def validate_make_check_job_order!(jobs)
   end
 end
 
+def unpinnable_action_ref?(uses)
+  uses.start_with?("./") || uses.start_with?("docker://")
+end
+
 def validate_actions_pinned!(jobs)
   jobs.each do |job_name, job|
     step_list!(job_name, job).each do |step|
-      next unless step["uses"].is_a?(String)
+      uses = step["uses"]
+      next unless uses.is_a?(String)
+      next if unpinnable_action_ref?(uses)
 
-      %w[actions/checkout actions/setup-node].each do |action|
-        next unless step["uses"].start_with?("#{action}@")
-        unless pinned_action_step?(step, action)
-          raise WorkflowConfigError, "jobs.#{job_name} must pin #{action} to a 40-character commit SHA"
-        end
-      end
+      action = uses.split("@", 2).first
+      next if pinned_action_step?(step, action)
+
+      raise WorkflowConfigError, "jobs.#{job_name} must pin #{action} to a 40-character commit SHA"
     end
   end
 end
