@@ -7,7 +7,7 @@ for `ctrl-alt-keith`.
 
 - [`profile/README.md`](profile/README.md) is the public organization profile.
 - [`.github/`](.github/) contains the pull request template, Dependabot
-  configuration, and Markdown lint workflow.
+  configuration, and validation workflow.
 - [`Makefile`](Makefile) defines the repository's validation entrypoints.
 
 ## Validate changes
