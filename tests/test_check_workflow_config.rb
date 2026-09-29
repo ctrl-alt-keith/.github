@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "minitest/autorun"
+require "tempfile"
 require_relative "../tools/check_workflow_config"
 
 class WorkflowConfigTest < Minitest::Test
@@ -44,6 +45,16 @@ class WorkflowConfigTest < Minitest::Test
 
   def test_accepts_checkout_and_markdownlint_before_make_check_in_same_job
     validate_workflow!(valid_workflow)
+  end
+
+  def test_load_workflow_reports_invalid_yaml_as_a_configuration_error
+    Tempfile.create(["workflow", ".yml"]) do |file|
+      file.write("jobs: [\n")
+      file.flush
+
+      error = assert_raises(WorkflowConfigError) { load_workflow(file.path) }
+      assert_includes(error.message, "invalid YAML:")
+    end
   end
 
   def test_rejects_checkout_after_make_check
