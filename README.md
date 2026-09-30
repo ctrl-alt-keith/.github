@@ -12,9 +12,10 @@ for `ctrl-alt-keith`.
 
 ## Validate changes
 
-Install `markdownlint-cli2`, then run:
+Install the same pinned Markdown linter version used by CI, then run:
 
 ```sh
+npm install --global markdownlint-cli2@0.23.2 --ignore-scripts
 make check
 ```
 
