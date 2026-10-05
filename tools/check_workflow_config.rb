@@ -115,9 +115,9 @@ def validate_make_check_job_order!(jobs)
     raise WorkflowConfigError, "jobs.#{job_name} must check out the repository before make check"
   end
 
-  unless prior_checkouts.any? { |step| checkout_with_safe_history_and_credentials?(step) }
+  unless checkout_with_safe_history_and_credentials?(prior_checkouts.last)
     raise WorkflowConfigError,
-          "jobs.#{job_name} needs one checkout with fetch-depth at least two and persisted credentials disabled"
+          "jobs.#{job_name} last checkout before make check needs fetch-depth at least two and persisted credentials disabled"
   end
 
   unless prior_checkouts.all? { |step| checkout_without_persisted_credentials?(step) }

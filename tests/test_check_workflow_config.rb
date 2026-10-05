@@ -214,21 +214,21 @@ class WorkflowConfigTest < Minitest::Test
     workflow = valid_workflow
     workflow["jobs"]["check"]["steps"][0] = { "uses" => CHECKOUT }
 
-    assert_invalid("needs one checkout with fetch-depth at least two") { workflow }
+    assert_invalid("last checkout before make check needs fetch-depth at least two") { workflow }
   end
 
   def test_rejects_checkout_that_persists_credentials
     workflow = valid_workflow
     workflow["jobs"]["check"]["steps"][0]["with"].delete("persist-credentials")
 
-    assert_invalid("needs one checkout with fetch-depth at least two") { workflow }
+    assert_invalid("last checkout before make check needs fetch-depth at least two") { workflow }
   end
 
   def test_rejects_checkout_with_non_mapping_options
     workflow = valid_workflow
     workflow["jobs"]["check"]["steps"][0]["with"] = []
 
-    assert_invalid("needs one checkout with fetch-depth at least two") { workflow }
+    assert_invalid("last checkout before make check needs fetch-depth at least two") { workflow }
   end
 
   def test_rejects_split_checkout_safety_requirements
@@ -241,7 +241,20 @@ class WorkflowConfigTest < Minitest::Test
     )
     workflow["jobs"]["check"]["steps"][1]["with"]["fetch-depth"] = 1
 
-    assert_invalid("needs one checkout with fetch-depth at least two") { workflow }
+    assert_invalid("last checkout before make check needs fetch-depth at least two") { workflow }
+  end
+
+  def test_rejects_shallow_checkout_after_safe_checkout
+    workflow = valid_workflow
+    workflow["jobs"]["check"]["steps"].insert(
+      1,
+      {
+        "uses" => CHECKOUT,
+        "with" => { "fetch-depth" => 1, "persist-credentials" => false }
+      }
+    )
+
+    assert_invalid("last checkout before make check needs fetch-depth at least two") { workflow }
   end
 
   def test_rejects_additional_checkout_that_persists_credentials
