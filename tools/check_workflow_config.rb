@@ -39,7 +39,7 @@ def step_list!(job_name, job)
 end
 
 def make_check_step?(step)
-  step["run"].is_a?(String) && step["run"].lines.any? { |line| line.strip == "make check" }
+  step["run"].is_a?(String) && step["run"].strip == "make check"
 end
 
 def checkout_step?(step)

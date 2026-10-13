@@ -147,6 +147,13 @@ class WorkflowConfigTest < Minitest::Test
     assert_invalid("must have exactly one canonical make check step") { workflow }
   end
 
+  def test_rejects_make_check_after_an_early_exit
+    workflow = valid_workflow
+    workflow["jobs"]["check"]["steps"][-1]["run"] = "exit 0\nmake check"
+
+    assert_invalid("must have exactly one canonical make check step") { workflow }
+  end
+
   def test_rejects_pull_request_target_trigger
     workflow = valid_workflow
     workflow["on"]["pull_request_target"] = nil
