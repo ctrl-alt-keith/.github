@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "minitest/autorun"
+require "tempfile"
 require_relative "../tools/check_dependabot_config"
 
 class DependabotConfigTest < Minitest::Test
@@ -24,6 +25,24 @@ class DependabotConfigTest < Minitest::Test
 
   def test_accepts_weekly_github_actions_updates
     validate_config!(valid_config)
+  end
+
+  def test_load_config_reports_invalid_yaml_as_a_configuration_error
+    Tempfile.create(["dependabot", ".yml"], Dir.pwd) do |file|
+      file.write("updates: [\n")
+      file.flush
+
+      error = assert_raises(DependabotConfigError) { load_config(file.path) }
+      assert_includes(error.message, "invalid YAML:")
+    end
+  end
+
+  def test_load_config_reports_missing_file_as_a_configuration_error
+    missing_path = File.join(Dir.pwd, "missing-dependabot-config.yml")
+    refute(File.exist?(missing_path))
+
+    error = assert_raises(DependabotConfigError) { load_config(missing_path) }
+    assert_includes(error.message, "does not exist")
   end
 
   def test_rejects_wrong_version
