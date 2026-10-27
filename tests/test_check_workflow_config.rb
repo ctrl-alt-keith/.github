@@ -82,6 +82,13 @@ class WorkflowConfigTest < Minitest::Test
     assert_invalid("must install markdownlint-cli2 before make check") { workflow }
   end
 
+  def test_rejects_no_op_step_that_only_mentions_markdownlint
+    workflow = valid_workflow
+    workflow["jobs"]["check"]["steps"][3]["run"] = "echo markdownlint-cli2 is installed"
+
+    assert_invalid("must install markdownlint-cli2 before make check") { workflow }
+  end
+
   def test_rejects_checkout_only_in_another_job
     workflow = valid_workflow
     workflow["jobs"] = {

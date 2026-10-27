@@ -65,7 +65,8 @@ def checkout_with_safe_history_and_credentials?(step)
 end
 
 def markdownlint_install_step?(step)
-  step["run"].is_a?(String) && step["run"].include?("markdownlint-cli2")
+  step["run"].is_a?(String) &&
+    step["run"].strip.match?(/\Anpm install --global markdownlint-cli2(?:@\S+)?(?:\s|\z)/)
 end
 
 def validate_permissions!(workflow, jobs)
