@@ -89,6 +89,33 @@ class WorkflowConfigTest < Minitest::Test
     assert_invalid("must install markdownlint-cli2 before make check") { workflow }
   end
 
+  def test_accepts_supported_npm_global_install_forms
+    [
+      "npm install --global markdownlint-cli2@0.23.2 --ignore-scripts",
+      "npm install -g markdownlint-cli2@0.23.2",
+      "npm i -g markdownlint-cli2",
+      "npm install markdownlint-cli2@0.23.2 --global"
+    ].each do |command|
+      workflow = valid_workflow
+      workflow["jobs"]["check"]["steps"][3]["run"] = command
+      validate_workflow!(workflow)
+    end
+  end
+
+  def test_rejects_non_install_commands_and_extra_shell_actions
+    [
+      "echo npm install --global markdownlint-cli2",
+      "npm install --global markdownlint-cli2-extra",
+      "npm install --global markdownlint-cli2 || true",
+      "npm install --global markdownlint-cli2; echo done",
+      "npm install --global markdownlint-cli2\nexit 0"
+    ].each do |command|
+      workflow = valid_workflow
+      workflow["jobs"]["check"]["steps"][3]["run"] = command
+      assert_invalid("must install markdownlint-cli2 before make check") { workflow }
+    end
+  end
+
   def test_rejects_checkout_only_in_another_job
     workflow = valid_workflow
     workflow["jobs"] = {

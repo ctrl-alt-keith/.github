@@ -21,3 +21,8 @@ make check
 
 This validates the GitHub configuration, checks Markdown and Git whitespace,
 and runs the same checks used by the repository workflow.
+The workflow validator accepts a single `npm install` or `npm i` command that
+globally installs `markdownlint-cli2` (optionally with a version and
+`--ignore-scripts`). The pinned command above is the one CI runs; the validator
+does not require that exact spelling. A mention, no-op, or additional shell
+command does not satisfy the installer check.
