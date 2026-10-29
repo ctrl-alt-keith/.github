@@ -47,6 +47,13 @@ class WorkflowConfigTest < Minitest::Test
     validate_workflow!(valid_workflow)
   end
 
+  def test_rejects_continue_on_error_for_canonical_make_check
+    workflow = valid_workflow
+    workflow["jobs"]["check"]["steps"][-1]["continue-on-error"] = true
+
+    assert_invalid("must not continue on error for the canonical make check step") { workflow }
+  end
+
   def test_load_workflow_reports_invalid_yaml_as_a_configuration_error
     Tempfile.create(["workflow", ".yml"]) do |file|
       file.write("jobs: [\n")

@@ -113,6 +113,11 @@ def validate_make_check_job_order!(jobs)
   end
 
   job_name, steps, make_check_index = make_check_locations.first
+  if steps[make_check_index]["continue-on-error"] == true
+    raise WorkflowConfigError,
+          "jobs.#{job_name}.steps[#{make_check_index}] must not continue on error for the canonical make check step"
+  end
+
   prior_steps = steps.first(make_check_index)
   prior_checkouts = prior_steps.select { |step| checkout_step?(step) }
 
