@@ -47,6 +47,27 @@ class WorkflowConfigTest < Minitest::Test
     validate_workflow!(valid_workflow)
   end
 
+  def test_rejects_continue_on_error_for_canonical_make_check
+    workflow = valid_workflow
+    workflow["jobs"]["check"]["steps"][-1]["continue-on-error"] = true
+
+    assert_invalid("continue-on-error must be omitted or false") { workflow }
+  end
+
+  def test_accepts_literal_false_for_canonical_make_check
+    workflow = valid_workflow
+    workflow["jobs"]["check"]["steps"][-1]["continue-on-error"] = false
+
+    validate_workflow!(workflow)
+  end
+
+  def test_rejects_expression_for_continue_on_error_for_canonical_make_check
+    workflow = valid_workflow
+    workflow["jobs"]["check"]["steps"][-1]["continue-on-error"] = "${{ fromJSON(env.continue) }}"
+
+    assert_invalid("continue-on-error must be omitted or false") { workflow }
+  end
+
   def test_load_workflow_reports_invalid_yaml_as_a_configuration_error
     Tempfile.create(["workflow", ".yml"]) do |file|
       file.write("jobs: [\n")
