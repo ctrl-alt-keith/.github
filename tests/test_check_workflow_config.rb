@@ -54,6 +54,20 @@ class WorkflowConfigTest < Minitest::Test
     assert_invalid("continue-on-error must be omitted or false") { workflow }
   end
 
+  def test_rejects_condition_that_skips_canonical_make_check
+    workflow = valid_workflow
+    workflow["jobs"]["check"]["steps"][-1]["if"] = false
+
+    assert_invalid("must run unconditionally") { workflow }
+  end
+
+  def test_rejects_job_condition_that_skips_canonical_make_check
+    workflow = valid_workflow
+    workflow["jobs"]["check"]["if"] = false
+
+    assert_invalid("must run unconditionally") { workflow }
+  end
+
   def test_accepts_literal_false_for_canonical_make_check
     workflow = valid_workflow
     workflow["jobs"]["check"]["steps"][-1]["continue-on-error"] = false
