@@ -113,6 +113,10 @@ def validate_make_check_job_order!(jobs)
   end
 
   job_name, steps, make_check_index = make_check_locations.first
+  if jobs.fetch(job_name).key?("needs")
+    raise WorkflowConfigError, "jobs.#{job_name} must not depend on other jobs"
+  end
+
   if jobs.fetch(job_name).key?("if")
     raise WorkflowConfigError, "jobs.#{job_name} must run unconditionally"
   end

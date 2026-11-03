@@ -68,6 +68,35 @@ class WorkflowConfigTest < Minitest::Test
     assert_invalid("must run unconditionally") { workflow }
   end
 
+  def test_rejects_canonical_job_dependency_that_can_skip_check
+    ["upstream", ["upstream"]].each do |dependency|
+      workflow = valid_workflow
+      workflow["jobs"]["upstream"] = { "steps" => [{ "run" => "exit 1" }] }
+      workflow["jobs"]["check"]["needs"] = dependency
+
+      assert_invalid("jobs.check must not depend on other jobs") { workflow }
+    end
+  end
+
+  def test_requires_canonical_job_needs_key_to_be_absent
+    [nil, []].each do |dependency|
+      workflow = valid_workflow
+      workflow["jobs"]["check"]["needs"] = dependency
+
+      assert_invalid("jobs.check must not depend on other jobs") { workflow }
+    end
+  end
+
+  def test_allows_other_job_to_depend_on_canonical_check
+    workflow = valid_workflow
+    workflow["jobs"]["followup"] = {
+      "needs" => "check",
+      "steps" => [{ "run" => "echo done" }]
+    }
+
+    validate_workflow!(workflow)
+  end
+
   def test_accepts_literal_false_for_canonical_make_check
     workflow = valid_workflow
     workflow["jobs"]["check"]["steps"][-1]["continue-on-error"] = false
