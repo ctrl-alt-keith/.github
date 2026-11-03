@@ -113,7 +113,16 @@ def validate_make_check_job_order!(jobs)
   end
 
   job_name, steps, make_check_index = make_check_locations.first
+  if jobs.fetch(job_name).key?("if")
+    raise WorkflowConfigError, "jobs.#{job_name} must run unconditionally"
+  end
+
   make_check_step = steps[make_check_index]
+  if make_check_step.key?("if")
+    raise WorkflowConfigError,
+          "jobs.#{job_name}.steps[#{make_check_index}] must run unconditionally"
+  end
+
   if make_check_step.key?("continue-on-error") && make_check_step["continue-on-error"] != false
     raise WorkflowConfigError,
           "jobs.#{job_name}.steps[#{make_check_index}].continue-on-error must be omitted or false for the canonical make check step"
