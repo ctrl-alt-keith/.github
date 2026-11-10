@@ -185,7 +185,10 @@ def validate_workflow!(workflow)
   events = workflow.key?("on") ? workflow["on"] : workflow[true]
   mapping!(events, "on must be a mapping")
 
-  raise WorkflowConfigError, "must run on pull_request" unless events.key?("pull_request")
+  pull_request = events["pull_request"]
+  unless events.key?("pull_request") && (pull_request.nil? || pull_request == {})
+    raise WorkflowConfigError, "pull_request must run without event, branch, or path filters"
+  end
 
   push = mapping!(events["push"], "push must be a mapping")
   branches = push["branches"]
