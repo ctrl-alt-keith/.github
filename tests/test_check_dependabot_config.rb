@@ -62,6 +62,17 @@ class DependabotConfigTest < Minitest::Test
     assert_invalid("updates[1].schedule must be a mapping") { config }
   end
 
+  def test_rejects_unsupported_interval_on_a_later_update
+    config = valid_config
+    config["updates"] << {
+      "package-ecosystem" => "bundler",
+      "directory" => "/",
+      "schedule" => { "interval" => "hourly" }
+    }
+
+    assert_invalid("updates[1].schedule.interval is unsupported") { config }
+  end
+
   def test_rejects_missing_github_actions_root_update
     config = valid_config
     config["updates"][0]["directory"] = "/docs"
