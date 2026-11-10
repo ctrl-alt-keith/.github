@@ -259,6 +259,19 @@ class WorkflowConfigTest < Minitest::Test
     assert_invalid("must not use pull_request_target") { workflow }
   end
 
+  def test_rejects_filtered_pull_request_trigger
+    [
+      { "paths" => ["docs/**"] },
+      { "branches" => ["main"] },
+      { "types" => ["opened"] }
+    ].each do |filter|
+      workflow = valid_workflow
+      workflow["on"]["pull_request"] = filter
+
+      assert_invalid("pull_request must run without event, branch, or path filters") { workflow }
+    end
+  end
+
   def test_rejects_missing_concurrency
     workflow = valid_workflow
     workflow.delete("concurrency")
