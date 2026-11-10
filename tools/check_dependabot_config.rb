@@ -4,6 +4,7 @@
 require "yaml"
 
 CONFIG_PATH = File.expand_path("../.github/dependabot.yml", __dir__)
+SUPPORTED_INTERVALS = %w[daily weekly monthly quarterly semiannually yearly cron].freeze
 
 class DependabotConfigError < StandardError; end
 
@@ -47,6 +48,9 @@ def validate_config!(config)
     end
     unless schedule["interval"].is_a?(String) && !schedule["interval"].empty?
       raise DependabotConfigError, "#{path}.schedule.interval is required"
+    end
+    unless SUPPORTED_INTERVALS.include?(schedule["interval"])
+      raise DependabotConfigError, "#{path}.schedule.interval is unsupported"
     end
   end
 
