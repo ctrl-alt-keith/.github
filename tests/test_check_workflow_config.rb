@@ -132,6 +132,44 @@ class WorkflowConfigTest < Minitest::Test
     assert_invalid("must check out the repository before make check") { workflow }
   end
 
+  def test_rejects_checkout_that_can_be_skipped
+    [false, "${{ github.event_name == 'push' }}"].each do |condition|
+      workflow = valid_workflow
+      workflow["jobs"]["check"]["steps"][0]["if"] = condition
+
+      assert_invalid("needs an unconditional safe checkout before make check") { workflow }
+    end
+  end
+
+  def test_accepts_optional_checkout_after_unconditional_checkout
+    workflow = valid_workflow
+    workflow["jobs"]["check"]["steps"].insert(
+      1,
+      {
+        "uses" => CHECKOUT,
+        "if" => "${{ github.event_name == 'push' }}",
+        "with" => { "fetch-depth" => 2, "persist-credentials" => false }
+      }
+    )
+
+    validate_workflow!(workflow)
+  end
+
+  def test_rejects_optional_safe_checkout_after_shallow_unconditional_checkout
+    workflow = valid_workflow
+    workflow["jobs"]["check"]["steps"][0]["with"]["fetch-depth"] = 1
+    workflow["jobs"]["check"]["steps"].insert(
+      1,
+      {
+        "uses" => CHECKOUT,
+        "if" => "${{ github.event_name == 'push' }}",
+        "with" => { "fetch-depth" => 2, "persist-credentials" => false }
+      }
+    )
+
+    assert_invalid("needs an unconditional safe checkout before make check") { workflow }
+  end
+
   def test_rejects_markdownlint_install_after_make_check
     workflow = valid_workflow
     workflow["jobs"]["check"]["steps"] = [

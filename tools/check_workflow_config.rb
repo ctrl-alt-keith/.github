@@ -149,6 +149,13 @@ def validate_make_check_job_order!(jobs)
           "jobs.#{job_name} every checkout before make check must disable persisted credentials"
   end
 
+  unless prior_checkouts.any? do |step|
+           (!step.key?("if") || step["if"] == true) && checkout_with_safe_history_and_credentials?(step)
+         end
+    raise WorkflowConfigError,
+          "jobs.#{job_name} needs an unconditional safe checkout before make check"
+  end
+
   unless prior_steps.any? { |step| markdownlint_install_step?(step) }
     raise WorkflowConfigError, "jobs.#{job_name} must install markdownlint-cli2 before make check"
   end
